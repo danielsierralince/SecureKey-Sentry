@@ -74,12 +74,21 @@ def abrir_ventana_otp(usuario):
     
     ventana_otp.mainloop()
 
+def center_window(window, window_width, window_height):
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+
+    x = int((screen_width / 2) - (window_width / 2))
+    y = int((screen_height / 2) - (window_height / 2))
+
+    window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
 class otp_window():
     def __init__(self) -> None:
         #Window settings
         self.window = tk.Tk()
         self.window.title("SecureKey Sentry")
-        self.window.geometry("300x200")
+        center_window(self.window, 300, 200)
 
         #Password tag and variable
         self.password_label_timer = tk.StringVar()
@@ -119,20 +128,22 @@ class main_window():
         #Login window settup
         self.login_window = tk.Tk()
         self.login_window.title("Log in")
-        self.login_window.geometry("200x150+550+250")
+        center_window(self.login_window, 200, 150)
 
         label_user = tk.Label(self.login_window, text="User:")
-        label_user.focus_set()
         label_user.pack()
 
         self.entry_user = tk.Entry(self.login_window)
         self.entry_user.pack()
+        self.entry_user.focus_set()
+        self.entry_user.bind('<Return>', self.log_in)
 
         label_pwd = tk.Label(self.login_window, text="Password:")
         label_pwd.pack()
 
         self.entry_pwd = tk.Entry(self.login_window, show="*")
         self.entry_pwd.pack()
+        self.entry_pwd.bind('<Return>', self.log_in)
 
         self.message = tk.StringVar()
         label_message = tk.Label(self.login_window, textvariable=self.message)
@@ -144,7 +155,7 @@ class main_window():
         #Loop init
         self.login_window.mainloop()
 
-    def log_in(self):
+    def log_in(self, event):
         #Get GUI data and data validation
         if self.entry_user.get() != "":
             usr = self.entry_user.get()
@@ -159,6 +170,7 @@ class main_window():
             self.login_window.destroy()
             otp = otp_window()
         elif collection.find_one({'user': usr}): #Password validation
+            self.entry_pwd.delete(0, tk.END)
             self.message.set("Incorrect password!")
         elif not collection.find_one({'user': usr}): #User validation
             self.message.set("User doesn't exist!")
