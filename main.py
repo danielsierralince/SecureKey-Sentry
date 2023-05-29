@@ -20,8 +20,6 @@ client = MongoClient(my_uri)
 data_base = client[my_db]
 collection = data_base[my_collect]
 
-OTP = 0
-
 #OTP Generation
 def generate_otp():
     otp = secrets.randbelow(999999) + 100000  #6-digit OTP number
@@ -30,11 +28,11 @@ def generate_otp():
 #OTP storage using a hash table
 otp_table = {}
 
-def store_otp(user_id):
+def store_otp(user):
     otp = generate_otp()
-    otp_table[user_id] = otp
+    otp_table[user] = otp
     otp_hash = hashlib.sha256(str(otp).encode()).hexdigest()
-    otp_table[user_id] = (otp, otp_hash)
+    otp_table[user] = (otp, otp_hash)
 
 #OTP Verification
 def verify_otp(user_id, otp):
@@ -88,35 +86,36 @@ class otp_window():
         #Window settings
         self.window = tk.Tk()
         self.window.title("SecureKey Sentry")
-        center_window(self.window, 300, 200)
+        center_window(self.window, 300, 150)
 
         #Password tag and variable
-        self.password_label_timer = tk.StringVar()
         self.password = tk.StringVar()
         password_label = tk.Label(self.window, textvariable=self.password, font=("Arial", 24))
         password_label.pack(pady=20)
 
-        #First password
-        user = "example_user"
-        store_otp(user)
-        self.password.set(str(otp_table[user][0]))
+        #Timer tag and variable
+        self.password_label_timer = tk.StringVar()
+        timer_label = tk.Label(self.window, textvariable=self.password_label_timer, font=("Arial", 12))
+        timer_label.pack()
 
         #Timer to change password every minute
+        self.user = "example_user"
+        self.update_password()
         self.window.after(60000, self.update_password)
 
         #Starting the main loop
         self.window.mainloop()
 
     def countdown(self, remaining_time):
-        self.password_label_timer.set("Updating OTP en: {} segundos".format(remaining_time))
+        self.password_label_timer.set("New OTP in: {} seconds".format(remaining_time))
         if remaining_time > 0:
             self.window.after(1000, self.countdown, remaining_time - 1)
     
     #Runs every minute to OTP change
-    def update_password(self, user):
-        store_otp(user)
-        self.password.set(str(otp_table[user][0]))
-        self.countdown(60)
+    def update_password(self):
+        store_otp(self.user)
+        self.password.set(str(otp_table[self.user][0]))
+        self.countdown(59)
         self.window.after(60000, self.update_password)  # Llamada recursiva para actualizar el OTP cada minuto
 
 def md5_hash(pwd):
