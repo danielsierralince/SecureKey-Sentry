@@ -68,47 +68,59 @@ class otp_window():
 
 class sign_in():
     def __init__(self) -> None:
-        self.login_window = tk.Toplevel()
+        self.login_window = tk.Tk()
         self.login_window.title("Create an account")
-        center_window(self.login_window, 300, 200)
+        center_window(self.login_window, 200, 140)
         
         label_user = tk.Label(self.login_window, text="User:")
         label_user.pack()
         
         self.entry_user = tk.Entry(self.login_window)
         self.entry_user.pack()
+        self.entry_user.focus_set()
+        self.entry_user.bind('<Return>', self.save_account)
         
         label_pwd = tk.Label(self.login_window, text="Password:")
         label_pwd.pack()
         
         self.entry_pwd = tk.Entry(self.login_window, show="*")
         self.entry_pwd.pack()
+        self.entry_pwd.bind('<Return>', self.save_account)
+
+        self.label_message = tk.Label(self.login_window, text="")
+        self.label_message.pack()
 
         button = tk.Button(self.login_window, text="Save account", command=self.save_account)
         button.pack()
-        
-        message = tk.StringVar()
-        label_message = tk.Label(self.login_window, textvariable=message)
-        label_message.pack()
+
+        #Loop init
+        self.login_window.mainloop()
     
-    def save_account(self):
-        if self.entry_user.get() != "":
+    def text_label(self, set_text):
+        self.label_message.config(text=set_text)
+    
+    def save_account(self, arg=None):
+        user = self.entry_user.get()
+        if user != "" and not collection.find_one({'user': user}):
             user = self.entry_user.get()
+        elif collection.find_one({'user': user}):
+            return self.text_label("The user already exists!")
         else:
-            return self.message.set("User entry is empty!")
+            return self.text_label("User entry is empty!")
+        
         if self.entry_pwd.get() != "":
             password = md5_hash(self.entry_pwd.get())
         else:
-            return self.message.set("Password entry is empty!")
+            return self.text_label("Password entry is empty!")
         
         try:
-            document = {
+            new_user = {
                 'user': user,
                 'password hash': password,
-                'OTP': 000000,
+                'OTP': 0,
                 'active': 0
             }
-            collection.insert_one(document)
+            collection.insert_one(new_user)
         except errors.ServerSelectionTimeoutError as TimeoutError:
             print(TimeoutError)
         except errors.ConnectionFailure as ConnectionError:
@@ -117,19 +129,19 @@ class sign_in():
         self.open_popup()
         self.login_window.destroy()
     
-    def open_popup():
-        popup_window = tk.Toplevel()
-        popup_window.title("Saved")
-        center_window(popup_window, 200, 100)
+    def open_popup(self, arg=None):
+        self.popup_window = tk.Tk()
+        self.popup_window.title("Saved")
+        center_window(self.popup_window, 200, 100)
 
-        label = tk.Label(popup_window, text="The user was successfully added!")
+        label = tk.Label(self.popup_window, text="The user was successfully added!")
         label.pack(pady=20)
 
-        button = tk.Button(popup_window, text="Okay", command=popup_window.destroy)
+        button = tk.Button(self.popup_window, text="Okay", command=self.close_popup)
         button.pack()
 
-def sign_in():
-    sign_in = sign_in()
+    def close_popup(self):
+        self.popup_window.destroy()
 
 class login_window():
     def __init__(self):
@@ -160,7 +172,7 @@ class login_window():
         login_button = tk.Button(self.login_window, text="Log in", command=self.log_in)
         login_button.pack()
 
-        signin_button = tk.Button(self.login_window, text="Sign in", command=sign_in)
+        signin_button = tk.Button(self.login_window, text="Sign in", command=self.sign_in)
         signin_button.pack()
 
         #Loop init
@@ -190,6 +202,10 @@ class login_window():
             self.message.set("Incorrect password!")
         elif not collection.find_one({'user': usr}): #User validation
             self.message.set("User doesn't exist!")
+    
+    def sign_in(self):
+        signin = sign_in()
+        self.login_window.destroy()
 
 if __name__ == '__main__':
     main = login_window()
