@@ -1,5 +1,6 @@
-import hashlib, secrets, time
+import hashlib, secrets
 import tkinter as tk
+from tkinter import ttk
 from pymongo import MongoClient
 
 #MongoDB Connection
@@ -57,7 +58,7 @@ class otp_window():
         self.window = tk.Tk()
         self.window.title("SecureKey Sentry")
         self.window.bind("<Destroy>", self.on_closing)
-        center_window(self.window, 300, 150)
+        center_window(self.window, 300, 160)
 
         #Password tag and variable
         self.password = tk.StringVar()
@@ -68,6 +69,9 @@ class otp_window():
         self.password_label_timer = tk.StringVar()
         timer_label = tk.Label(self.window, textvariable=self.password_label_timer, font=("Arial", 12))
         timer_label.pack()
+
+        self.progressbar = ttk.Progressbar(self.window, orient="horizontal", length=200, mode="determinate")
+        self.progressbar.pack(pady=10)
 
         #Timer to change password every minute
         self.user = user
@@ -81,12 +85,22 @@ class otp_window():
         self.password_label_timer.set("New OTP in: {} seconds".format(remaining_time))
         if remaining_time > 0:
             self.window.after(1000, self.countdown, remaining_time - 1)
+
+    def update_progressbar(self, total_time):
+        current_time = 60 - total_time
+        progress = ((60 - current_time) / 60) * 100
+        self.progressbar["value"] = progress
+        if total_time > 0:
+            self.window.after(1000, self.update_progressbar, total_time - 1)
+        else:
+            self.progressbar["value"] = 100
     
     #Runs every minute to OTP change
     def update_password(self):
         store_otp(self.user)
         self.password.set(str(otp_table[self.user][0]))
         self.countdown(59)
+        self.update_progressbar(60)
         self.window.after(60000, self.update_password)  # Llamada recursiva para actualizar el OTP cada minuto
 
     def on_closing(self, event):
