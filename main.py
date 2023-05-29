@@ -74,39 +74,41 @@ def abrir_ventana_otp(usuario):
     
     ventana_otp.mainloop()
 
-def countdown(remaining_time):
-    password_label_timer.set("Updating OTP en: {} segundos".format(remaining_time))
-    if remaining_time > 0:
-        window.after(1000, countdown, remaining_time - 1)
+class otp_window():
+    def __init__(self) -> None:
+        #Window settings
+        self.window = tk.Tk()
+        self.window.title("SecureKey Sentry")
+        self.window.geometry("300x200")
 
-#Runs every minute to OTP change
-def update_password(user):
-    store_otp(user)
-    password.set(str(otp_table[user][0]))
-    countdown(60)
-    window.after(60000, update_password)  # Llamada recursiva para actualizar el OTP cada minuto
+        #Password tag and variable
+        self.password_label_timer = tk.StringVar()
+        self.password = tk.StringVar()
+        password_label = tk.Label(self.window, textvariable=self.password, font=("Arial", 24))
+        password_label.pack(pady=20)
 
-#Window settings
-window = tk.Tk()
-window.title("SecureKey Sentry")
-window.geometry("300x200")
+        #First password
+        user = "example_user"
+        store_otp(user)
+        self.password.set(str(otp_table[user][0]))
 
-#Password tag and variable
-password_label_timer = tk.StringVar()
-password = tk.StringVar()
-password_label = tk.Label(window, textvariable=password, font=("Arial", 24))
-password_label.pack(pady=20)
+        #Timer to change password every minute
+        self.window.after(60000, self.update_password)
 
-#First password
-user = "example_user"
-store_otp(user)
-password.set(str(otp_table[user][0]))
+        #Starting the main loop
+        self.window.mainloop()
 
-#Timer to change password every minute
-window.after(60000, update_password)
-
-#Starting the main loop
-window.mainloop()
+    def countdown(self, remaining_time):
+        self.password_label_timer.set("Updating OTP en: {} segundos".format(remaining_time))
+        if remaining_time > 0:
+            self.window.after(1000, self.countdown, remaining_time - 1)
+    
+    #Runs every minute to OTP change
+    def update_password(self, user):
+        store_otp(user)
+        self.password.set(str(otp_table[user][0]))
+        self.countdown(60)
+        self.window.after(60000, self.update_password)  # Llamada recursiva para actualizar el OTP cada minuto
 
 def md5_hash(pwd):
     md5_hash = hashlib.md5(pwd.encode()).hexdigest()
@@ -115,40 +117,51 @@ def md5_hash(pwd):
 class main_window():
     def __init__(self):
         #Login window settup
-        login_window = tk.Tk()
-        login_window.title("Log in")
-        login_window.geometry("200x150")
+        self.login_window = tk.Tk()
+        self.login_window.title("Log in")
+        self.login_window.geometry("200x150+550+250")
 
-        label_user = tk.Label(login_window, text="User:")
+        label_user = tk.Label(self.login_window, text="User:")
+        label_user.focus_set()
         label_user.pack()
 
-        self.entry_user = tk.Entry(login_window)
+        self.entry_user = tk.Entry(self.login_window)
         self.entry_user.pack()
 
-        label_pwd = tk.Label(login_window, text="Password:")
+        label_pwd = tk.Label(self.login_window, text="Password:")
         label_pwd.pack()
 
-        self.entry_pwd = tk.Entry(login_window, show="*")
+        self.entry_pwd = tk.Entry(self.login_window, show="*")
         self.entry_pwd.pack()
 
         self.message = tk.StringVar()
-        label_message = tk.Label(login_window, textvariable=self.message)
+        label_message = tk.Label(self.login_window, textvariable=self.message)
         label_message.pack()
 
-        login_button = tk.Button(login_window, text="Log in", command=self.log_in)
+        login_button = tk.Button(self.login_window, text="Log in", command=self.log_in)
         login_button.pack()
 
         #Loop init
-        login_window.mainloop()
+        self.login_window.mainloop()
 
     def log_in(self):
-        #Get GUI data
-        usr = self.entry_user.get()
-        pwd = md5_hash(self.entry_pwd.get())
+        #Get GUI data and data validation
+        if self.entry_user.get() != "":
+            usr = self.entry_user.get()
+        else:
+            return self.message.set("User entry is empty!")
+        if self.entry_pwd.get() != "":
+            pwd = md5_hash(self.entry_pwd.get())
+        else:
+            return self.message.set("Password entry is empty!")
 
         if collection.find_one({'user': usr, 'password hash': pwd}): #DB Search
-            self.message.set("Access granted!")
+            self.login_window.destroy()
+            otp = otp_window()
         elif collection.find_one({'user': usr}): #Password validation
             self.message.set("Incorrect password!")
-        elif not collection.find_one({'user': usr, 'password hash': pwd}): #User validation
+        elif not collection.find_one({'user': usr}): #User validation
             self.message.set("User doesn't exist!")
+
+if __name__ == '__main__':
+    main = main_window()
