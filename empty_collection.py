@@ -23,6 +23,7 @@ for _ in range(100):
         "_id": _,
         "user": "",
         "password hash": "",
+        "Cc": "",
         "OTP": 0,
         "active": 0
     }
