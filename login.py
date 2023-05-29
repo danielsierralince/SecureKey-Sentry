@@ -30,8 +30,20 @@ def center_window(window, window_width, window_height):
 
     window.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
+class bank_window():
+    def __init__(self) -> None:
+        #Window settings
+        self.otp_window = tk.Tk()
+        self.otp_window.title("Bank")
+        center_window(self.otp_window, 270, 70)
+
+        label = tk.Label(self.otp_window, text="WELCOME!!!", font=("Arial", 24), anchor="center")
+        label.pack()
+
 class otp_window():
     def __init__(self, user) -> None:
+        self.user = user
+
         #Window settings
         self.otp_window = tk.Tk()
         self.otp_window.title("SecureKey Sentry")
@@ -40,31 +52,28 @@ class otp_window():
         label_otp = tk.Label(self.otp_window, text="Enter the OTP:")
         label_otp.pack()
         
-        entry_otp = tk.Entry(self.otp_window)
-        entry_otp.pack()
-        entry_otp.focus_set()
+        self.entry_otp = tk.Entry(self.otp_window)
+        self.entry_otp.pack()
+        self.entry_otp.focus_set()
+        self.entry_otp.bind('<Return>', self.verify_otp)
+
+        self.message = tk.StringVar()
+        label_mensaje_otp = tk.Label(self.otp_window, textvariable=self.message)
+        label_mensaje_otp.pack()
 
         button = tk.Button(self.otp_window, text="Verificar OTP", command=lambda: self.verify_otp)
         button.pack()
-        
-        mensaje_otp = tk.StringVar()
-        label_mensaje_otp = tk.Label(self.otp_window, textvariable=mensaje_otp)
-        label_mensaje_otp.pack()
 
         #Starting the main loop
         self.otp_window.mainloop()
     
-    def verify_otp(user, otp):
-        document = collection.find_one({"user_id": user})
-        if document:
-            hashed_otp = document["otp_hash"]
-            print("OTP ingresado:", otp)  # Verificar el valor del OTP ingresado
-            print("OTP almacenado:", document["otp"])  # Verificar el valor del OTP almacenado
-            print("OTP hash almacenado:", hashed_otp)  # Verificar el valor del hash almacenado
-            if hashlib.sha256(str(otp).encode()).hexdigest() == hashed_otp:
-                collection.delete_one({"user_id": user})  # Eliminar el documento OTP verificado
-                return True
-        return False
+    def verify_otp(self, agr=None):
+        otp = self.entry_otp.get()
+        if collection.find_one({"user": self.user, "OTP": int(otp)}):
+            self.otp_window.destroy()
+            bank = bank_window()
+        elif collection.find_one({"user": self.user}):
+            return self.message.set("Invalid OTP!")
 
 class sign_in():
     def __init__(self) -> None:
