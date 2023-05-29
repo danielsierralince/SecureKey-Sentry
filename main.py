@@ -4,8 +4,6 @@ from pymongo import MongoClient
 
 #MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
-db = client["proyectoEd"]
-collection = db["otp_collection"]
 
 #My DB
 my_host = "localhost"
@@ -30,6 +28,7 @@ otp_table = {}
 
 def store_otp(user):
     otp = generate_otp()
+    collection.update_one({'user': user}, {'$set': {'OTP': otp}}) #Update DB
     otp_table[user] = otp
     otp_hash = hashlib.sha256(str(otp).encode()).hexdigest()
     otp_table[user] = (otp, otp_hash)
@@ -43,35 +42,6 @@ def verify_otp(user_id, otp):
             return True
     return False
 
-def abrir_ventana_otp(usuario):
-    ventana_otp = tk.Toplevel()
-    ventana_otp.title("Verificación de OTP")
-    
-    ventana_otp.geometry("200x100")
-    
-    label_otp = tk.Label(ventana_otp, text="Ingrese el OTP:")
-    label_otp.pack()
-    
-    entry_otp = tk.Entry(ventana_otp)
-    entry_otp.pack()
-    
-    def verificar_otp(usuario):
-        otp = entry_otp.get()
-    
-        if verify_otp(usuario, otp):
-            mensaje_otp.set("OTP verificado con éxito")
-        else:
-            mensaje_otp.set("OTP incorrecto")
-    
-    boton_verificar_otp = tk.Button(ventana_otp, text="Verificar OTP", command=lambda: verificar_otp(usuario))
-    boton_verificar_otp.pack()
-    
-    mensaje_otp = tk.StringVar()
-    label_mensaje_otp = tk.Label(ventana_otp, textvariable=mensaje_otp)
-    label_mensaje_otp.pack()
-    
-    ventana_otp.mainloop()
-
 def center_window(window, window_width, window_height):
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
@@ -82,10 +52,11 @@ def center_window(window, window_width, window_height):
     window.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
 class otp_window():
-    def __init__(self) -> None:
+    def __init__(self, user) -> None:
         #Window settings
         self.window = tk.Tk()
         self.window.title("SecureKey Sentry")
+        self.window.bind("<Destroy>", self.on_closing)
         center_window(self.window, 300, 150)
 
         #Password tag and variable
@@ -99,7 +70,7 @@ class otp_window():
         timer_label.pack()
 
         #Timer to change password every minute
-        self.user = "example_user"
+        self.user = user
         self.update_password()
         self.window.after(60000, self.update_password)
 
@@ -117,6 +88,10 @@ class otp_window():
         self.password.set(str(otp_table[self.user][0]))
         self.countdown(59)
         self.window.after(60000, self.update_password)  # Llamada recursiva para actualizar el OTP cada minuto
+
+    def on_closing(self, event):
+        #Set user inactive
+        collection.update_one({'user': self.user}, {'$set': {'active': 0}})
 
 def md5_hash(pwd):
     md5_hash = hashlib.md5(pwd.encode()).hexdigest()
@@ -166,8 +141,9 @@ class main_window():
             return self.message.set("Password entry is empty!")
 
         if collection.find_one({'user': usr, 'password hash': pwd}): #DB Search
+            collection.update_one({'user': usr}, {'$set': {'active': 1}})
             self.login_window.destroy()
-            otp = otp_window()
+            otp = otp_window(usr)
         elif collection.find_one({'user': usr}): #Password validation
             self.entry_pwd.delete(0, tk.END)
             self.message.set("Incorrect password!")
