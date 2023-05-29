@@ -17,6 +17,27 @@ client = MongoClient(my_uri)
 data_base = client[my_db]
 collection = data_base[my_collect]
 
+def hash(cc):
+    table_size = 100  #Table hash size
+
+    #Folding technique
+    groups = [int(cc[i:i+2]) for i in range(0, len(cc), 2)] #Divide the number
+
+    total = sum(groups) #Add
+
+    hash_value = total % table_size #Size module
+
+    probe = 1
+    #Quadratic probing in case of collision
+    while not collection.find_one({"_id": hash_value, "user": None}):
+        #Open addressing technique 'quadratic probing'
+        hash_value = (hash_value + probe**2) % table_size #Rehashing, position with quadratic test
+        probe += 1
+        if probe==100:
+            return 1000
+
+    return hash_value
+
 def md5_hash(pwd):
     md5_hash = hashlib.md5(pwd.encode()).hexdigest()
     return md5_hash
@@ -79,7 +100,7 @@ class sign_in():
     def __init__(self) -> None:
         self.login_window = tk.Tk()
         self.login_window.title("Create an account")
-        center_window(self.login_window, 200, 140)
+        center_window(self.login_window, 200, 170)
         
         label_user = tk.Label(self.login_window, text="User:")
         label_user.pack()
@@ -88,6 +109,13 @@ class sign_in():
         self.entry_user.pack()
         self.entry_user.focus_set()
         self.entry_user.bind('<Return>', self.save_account)
+
+        label_cc = tk.Label(self.login_window, text="Identification card:")
+        label_cc.pack()
+        
+        self.entry_cc = tk.Entry(self.login_window)
+        self.entry_cc.pack()
+        self.entry_cc.bind('<Return>', self.save_account)
         
         label_pwd = tk.Label(self.login_window, text="Password:")
         label_pwd.pack()
@@ -104,6 +132,20 @@ class sign_in():
 
         #Loop init
         self.login_window.mainloop()
+    
+    def insert_db(self, user, password, cc):
+        try:
+            id = hash(cc)
+            if id != 1000:
+                collection.update_one({"_id": id}, {'$set': {'user': user, 'password hash': password, "Cc": cc}})
+            else:
+                self.text_label("DB is fill! Contact developer!")
+        except errors.ServerSelectionTimeoutError as TimeoutError:
+            print(TimeoutError)
+        except errors.ConnectionFailure as ConnectionError:
+            print(ConnectionError)
+        
+        self.open_popup(id)
     
     def text_label(self, set_text):
         self.label_message.config(text=set_text)
@@ -122,28 +164,23 @@ class sign_in():
         else:
             return self.text_label("Password entry is empty!")
         
-        try:
-            new_user = {
-                'user': user,
-                'password hash': password,
-                'OTP': 0,
-                'active': 0
-            }
-            collection.insert_one(new_user)
-        except errors.ServerSelectionTimeoutError as TimeoutError:
-            print(TimeoutError)
-        except errors.ConnectionFailure as ConnectionError:
-            print(ConnectionError)
-
-        self.open_popup()
+        if self.entry_cc.get() != "":
+            cc = self.entry_cc.get()
+        else:
+            return self.text_label("ID card entry is empty!")
+        if len(self.entry_cc.get()) != 10:
+            return self.text_label("UD card must have 10 digits!")
+        
+        self.insert_db(user, password, cc)
         self.login_window.destroy()
     
-    def open_popup(self, arg=None):
+    def open_popup(self, id):
         self.popup_window = tk.Tk()
         self.popup_window.title("Saved")
         center_window(self.popup_window, 200, 100)
 
-        label = tk.Label(self.popup_window, text="The user was successfully added!")
+        tex = f"The user was successfully added!\nID: {id}"
+        label = tk.Label(self.popup_window, text=tex)
         label.pack(pady=20)
 
         button = tk.Button(self.popup_window, text="Okay", command=self.close_popup)
