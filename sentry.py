@@ -1,5 +1,7 @@
-import hashlib, time, tkinter as tk, json
+import hashlib, tkinter as tk, random
+from tkinter import messagebox
 from pymongo import MongoClient, errors
+from PIL import ImageTk, Image
 
 #MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
@@ -54,12 +56,47 @@ def center_window(window, window_width, window_height):
 class bank_window():
     def __init__(self) -> None:
         #Window settings
-        self.otp_window = tk.Tk()
-        self.otp_window.title("Bank")
-        center_window(self.otp_window, 270, 70)
+        bank_window = tk.Tk()
+        bank_window.title("Bank")
+        bank_window.geometry("300x200")
+        center_window(bank_window, 300, 200)
 
-        label = tk.Label(self.otp_window, text="WELCOME!!!", font=("Arial", 24), anchor="center")
-        label.pack()
+        bank_window.iconbitmap("card.png")
+        card_image = Image.open("card.png")
+        card_image = card_image.resize((100, 100))  #Adjust image
+        card_image = ImageTk.PhotoImage(card_image)
+
+        label_amount = tk.Label(bank_window, text="Enter the amount to withdraw:", font=("Arial", 12), bg="#d0f2a0", fg="black", padx=10, pady=5)
+        label_amount.pack()
+
+        self.entry_amount = tk.Entry(bank_window)
+        self.entry_amount.pack()
+
+        boton_withdraw = tk.Button(bank_window, text="Withdraw", command=self.make_withdrawal, bg="#c95824", fg="white", font=("Arial", 12), relief=tk.RAISED)
+        boton_withdraw.pack()
+
+        self.available_balance = self.generate_balance()
+        label_saldo = tk.Label(bank_window, text=f"Available balance: {self.available_balance} USD", font=("Arial", 10), bg="#d0f2a0", fg="black", padx=10, pady=5)
+        label_saldo.pack()
+        label_imagen = tk.Label(bank_window, image=card_image)
+        label_imagen.pack()
+
+        bank_window.mainloop()
+
+    def make_withdrawal(self):
+        amount = self.entry_amount.get()
+        if amount.isdigit():
+            amount = int(amount)
+            if amount <= self.available_balance:
+                messagebox.showinfo("Bank", f"Successful withdrawal! {amount} dollars withdrew")
+            else:
+                messagebox.showerror("Bank", "Insufficient balance. The withdrawal cannot be made!")
+        else:
+            messagebox.showerror("Bank", "Invalid amount. Enter a numeric value!")
+
+    def generate_balance(self):
+        balances = [500, 1350, 2300, 10000, 20000, 25000, 37000, 48000, 52000, 79000, 94000, 103000, 256000, 512000]
+        return random.choice(balances)
 
 class otp_window():
     def __init__(self, user) -> None:
