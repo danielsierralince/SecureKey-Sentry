@@ -57,10 +57,17 @@ def abrir_ventana_otp(usuario):
     
     ventana_otp.mainloop()
 
+def countdown(remaining_time):
+    password_label_timer.set("Updating OTP en: {} segundos".format(remaining_time))
+    if remaining_time > 0:
+        window.after(1000, countdown, remaining_time - 1)
+
 #Runs every minute to OTP change
 def update_password():
     store_otp(user)
     password.set(str(otp_table[user][0]))
+    countdown(60)
+    window.after(60000, update_password)  # Llamada recursiva para actualizar el OTP cada minuto
 
 #Window settings
 window = tk.Tk()
@@ -68,6 +75,7 @@ window.title("SecureKey Sentry")
 window.geometry("300x200")
 
 #Password tag and variable
+password_label_timer = tk.StringVar()
 password = tk.StringVar()
 password_label = tk.Label(window, textvariable=password, font=("Arial", 24))
 password_label.pack(pady=20)
@@ -75,7 +83,7 @@ password_label.pack(pady=20)
 #First password
 user = "example_user"
 store_otp(user)
-password.set(str(otp_table[user]))
+password.set(str(otp_table[user][0]))
 
 #Timer to change password every minute
 window.after(60000, update_password)
