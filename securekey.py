@@ -1,7 +1,7 @@
 import hashlib, secrets
 import tkinter as tk
 from tkinter import ttk, messagebox
-from pymongo import MongoClient
+from pymongo import MongoClient, errors
 
 #MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
@@ -15,9 +15,14 @@ my_uri = f"mongodb://{my_host}:{my_port}"
 my_db = "SecureKey-Sentry"
 my_collect = "Users"
 
-client = MongoClient(my_uri)
-data_base = client[my_db]
-collection = data_base[my_collect]
+try:
+    client = MongoClient(my_uri)
+    data_base = client[my_db]
+    collection = data_base[my_collect]
+except errors.ServerSelectionTimeoutError as TimeoutError:
+    print(TimeoutError)
+except errors.ConnectionFailure as ConnectionError:
+    print(ConnectionError)
 
 #OTP Generation
 def generate_otp():
@@ -184,7 +189,10 @@ class main_window():
         self.login_window.withdraw()
         start_window = tk.Toplevel(self.login_window)
         start_window.title("Start screen")
-        screen = tk.PhotoImage(file="screen.png")
+        try:
+            screen = tk.PhotoImage(file="screen.png")
+        except Exception:
+            print(Exception)
         image = tk.Label(start_window, image=screen)
         image.pack()
         

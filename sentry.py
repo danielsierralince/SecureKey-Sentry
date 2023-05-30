@@ -15,9 +15,14 @@ my_uri = f"mongodb://{my_host}:{my_port}"
 my_db = "SecureKey-Sentry"
 my_collect = "Users"
 
-client = MongoClient(my_uri)
-data_base = client[my_db]
-collection = data_base[my_collect]
+try:
+    client = MongoClient(my_uri)
+    data_base = client[my_db]
+    collection = data_base[my_collect]
+except errors.ServerSelectionTimeoutError as TimeoutError:
+    print(TimeoutError)
+except errors.ConnectionFailure as ConnectionError:
+    print(ConnectionError)
 
 def hash(cc):
     table_size = 100  #Table hash size
@@ -61,8 +66,11 @@ class bank_window():
         bank_window.geometry("300x200")
         center_window(bank_window, 300, 200)
 
-        bank_window.iconbitmap("card.png")
-        card_image = Image.open("card.png")
+        try:
+            bank_window.iconbitmap("card.png")
+            card_image = Image.open("card.png")
+        except Exception:
+            print(Exception)
         card_image = card_image.resize((100, 100))  #Adjust image
         card_image = ImageTk.PhotoImage(card_image)
 
