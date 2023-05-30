@@ -66,7 +66,7 @@ class bank_window():
         bank_window.geometry("300x200")
         center_window(bank_window, 300, 200)
         try:
-            self.login_window.iconbitmap("sentry-gun.ico")
+            self.login_window.iconbitmap("bank.ico")
         except Exception:
             print(Exception)
 
@@ -118,6 +118,10 @@ class otp_window():
         self.otp_window = tk.Tk()
         self.otp_window.title("SecureKey Sentry")
         center_window(self.otp_window, 200, 100)
+        try:
+            self.otp_window.iconbitmap("sentry-gun.ico")
+        except Exception:
+            print(Exception)
         
         label_otp = tk.Label(self.otp_window, text="Enter the OTP:")
         label_otp.pack()
@@ -150,6 +154,10 @@ class sign_in():
         self.login_window = tk.Tk()
         self.login_window.title("Create an account")
         center_window(self.login_window, 200, 170)
+        try:
+            self.login_window.iconbitmap("sentry-gun.ico")
+        except Exception:
+            print(Exception)
         
         label_user = tk.Label(self.login_window, text="User:")
         label_user.pack()
@@ -227,6 +235,10 @@ class sign_in():
         self.popup_window = tk.Tk()
         self.popup_window.title("Saved")
         center_window(self.popup_window, 200, 100)
+        try:
+            self.popup_window.iconbitmap("sentry-gun.ico")
+        except Exception:
+            print(Exception)
 
         tex = f"The user was successfully added!\nID: {id}"
         label = tk.Label(self.popup_window, text=tex)
@@ -244,6 +256,10 @@ class login_window():
         self.login_window = tk.Tk()
         self.login_window.title("Log in")
         center_window(self.login_window, 200, 170)
+        try:
+            self.login_window.iconbitmap("sentry-gun.ico")
+        except Exception:
+            print(Exception)
 
         label_user = tk.Label(self.login_window, text="User:")
         label_user.pack()
