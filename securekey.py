@@ -64,6 +64,10 @@ class otp_window():
         self.window.title("SecureKey Sentry")
         self.window.bind("<Destroy>", self.on_closing)
         center_window(self.window, 300, 160)
+        try:
+            self.login_window.iconbitmap("password.ico")
+        except Exception:
+            print(Exception)
 
         #Password tag and variable
         self.password = tk.StringVar()
@@ -122,6 +126,10 @@ class main_window():
         self.login_window = tk.Tk()
         self.login_window.title("Log in")
         center_window(self.login_window, 200, 300)
+        try:
+            self.login_window.iconbitmap("password.ico")
+        except Exception:
+            print(Exception)
 
         label_user = tk.Label(self.login_window, text="User:")
         label_user.pack()

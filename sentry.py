@@ -65,6 +65,10 @@ class bank_window():
         bank_window.title("Bank")
         bank_window.geometry("300x200")
         center_window(bank_window, 300, 200)
+        try:
+            self.login_window.iconbitmap("sentry-gun.ico")
+        except Exception:
+            print(Exception)
 
         try:
             bank_window.iconbitmap("card.png")
