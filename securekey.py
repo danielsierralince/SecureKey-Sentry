@@ -1,6 +1,6 @@
 import hashlib, secrets
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from pymongo import MongoClient
 
 #MongoDB Connection
@@ -116,7 +116,7 @@ class main_window():
         #Login window settup
         self.login_window = tk.Tk()
         self.login_window.title("Log in")
-        center_window(self.login_window, 200, 150)
+        center_window(self.login_window, 200, 300)
 
         label_user = tk.Label(self.login_window, text="User:")
         label_user.pack()
@@ -139,6 +139,19 @@ class main_window():
 
         login_button = tk.Button(self.login_window, text="Log in", command=self.log_in)
         login_button.pack()
+
+        #Frame for the navigation bar
+        frame = tk.Frame(self.login_window, width=200, height=50, bg="black")
+        frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+        style = ttk.Style()
+        style.configure("TButton", font=("Helvetica", 12))
+
+        back_button = ttk.Button(frame, text="◀", command=self.back_click)
+        back_button.pack(side=tk.LEFT)
+
+        start_button = ttk.Button(frame, text="🏠", command=self.start_click)
+        start_button.pack(side=tk.LEFT)
 
         #Loop init
         self.login_window.mainloop()
@@ -163,6 +176,20 @@ class main_window():
             self.message.set("Incorrect password!")
         elif not collection.find_one({'user': usr}): #User validation
             self.message.set("User doesn't exist!")
+
+    def back_click(arg=None):
+        messagebox.showinfo("Back", "Coming back")
+
+    def start_click(self):
+        self.login_window.withdraw()
+        start_window = tk.Toplevel(self.login_window)
+        start_window.title("Start screen")
+        screen = tk.PhotoImage(file="screen.png")
+        image = tk.Label(start_window, image=screen)
+        image.pack()
+        
+        center_window(start_window, screen.width(), screen.height())
+        start_window.mainloop()
 
 if __name__ == '__main__':
     main = main_window()
