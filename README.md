@@ -9,7 +9,7 @@
 
 SecureKey implements security protocols for access control through a hashed dynamic key, while Sentry requests and verifies the OTP to authorize access to a banking system. Sentry evokes the image of a protective guardian tasked with system security.
 
-The program utilizes a hash table data structure to store user data in the database. Each user is assigned a unique identifier generated through a combination of folding and quadratic probing techniques by working with the user identification card. hese techniques facilitate rehashing for efficient collision handling.
+The program utilizes a hash table data structure to store user data in the database. Each user is assigned a unique identifier generated through a combination of folding and quadratic probing techniques by working with the user identification card. These techniques facilitate rehashing for efficient collision handling.
 
 ## Built With <a name="built-with"></a>
 
